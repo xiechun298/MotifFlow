@@ -61,10 +61,10 @@
   .picker button img { width: 74px; height: 74px; border-radius: 6px; object-fit: cover; }
   .picker button:hover { opacity: 1; }
   .picker button[aria-pressed="true"] { border-color: var(--accent); opacity: 1; }
-  .stage { display: grid; grid-template-columns: 1fr 2.08fr; gap: 16px; align-items: start; }
+  .stage { display: grid; grid-template-columns: calc((100% - 32px) / 3) 1fr; gap: 16px; align-items: start; }
   .inputs { display: grid; gap: 16px; }
   .tile { position: relative; }
-  .tile img { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; }
+  .tile img { display: block; width: 100%; height: auto; aspect-ratio: 1; border-radius: 8px; }
   .tag {
     position: absolute; left: 8px; top: 8px; background: rgba(20, 28, 36, .72); color: #fff;
     font-size: 0.78rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; letter-spacing: .02em;
