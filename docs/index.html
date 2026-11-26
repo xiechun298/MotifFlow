@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MotifFlow: Training-Free, Self-Contained Style Transfer from Color to Motif</title>
+<meta name="description" content="MotifFlow transfers the style of a reference image with a frozen FLUX model: no training, no adapter, no auxiliary encoder. One strength parameter moves the result from color transfer to brushwork and motifs.">
+<meta property="og:title" content="MotifFlow: Training-Free, Self-Contained Style Transfer from Color to Motif in Rectified Flow Transformers">
+<meta property="og:description" content="Training-free style transfer on FLUX with a single strength control, from color to brushwork to motif.">
+<meta property="og:image" content="https://xiechun298.github.io/MotifFlow/static/img/social.jpg">
+<meta property="og:type" content="website">
+<style>
+  :root {
+    --ink: #1c2530;
+    --muted: #5b6875;
+    --line: #dfe5ea;
+    --bg: #ffffff;
+    --soft: #f4f7f9;
+    --accent: #286879;
+    --accent-soft: #d6e6e8;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  .narrow { max-width: 780px; margin: 0 auto; }
+  header { padding: 64px 0 28px; text-align: center; }
+  h1 { font-size: clamp(1.7rem, 4.2vw, 2.7rem); line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
+  h1 .name { color: var(--accent); }
+  .subtitle { font-size: clamp(1.05rem, 2.3vw, 1.4rem); font-weight: 500; color: var(--ink); margin: 0 0 26px; line-height: 1.35; }
+  .authors { font-size: 1.12rem; margin: 0; }
+  .affil { color: var(--muted); margin: 4px 0 24px; }
+  .buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: 999px;
+    background: var(--ink); color: #fff; text-decoration: none; font-weight: 600; font-size: 0.98rem;
+  }
+  .btn:hover { background: var(--accent); }
+  .btn.ghost { background: transparent; color: var(--muted); border: 1.5px dashed #b9c4cd; cursor: default; }
+  .btn svg { width: 18px; height: 18px; fill: currentColor; }
+  section { padding: 44px 0; }
+  section.alt { background: var(--soft); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  h2 { font-size: 1.55rem; margin: 0 0 14px; text-align: center; letter-spacing: -0.01em; }
+  p { margin: 0 0 14px; }
+  .lead { color: var(--muted); text-align: center; max-width: 720px; margin: 0 auto 26px; }
+  figure { margin: 0; }
+  figure img { display: block; width: 100%; height: auto; border-radius: 6px; background: #fff; }
+  figcaption { color: var(--muted); font-size: 0.93rem; line-height: 1.55; margin-top: 12px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+
+  /* strength explorer */
+  .picker { display: flex; gap: 10px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .picker button {
+    padding: 0; border: 3px solid transparent; border-radius: 10px; background: none; cursor: pointer; line-height: 0;
+    opacity: 0.6; transition: opacity .15s, border-color .15s;
+  }
+  .picker button img { width: 74px; height: 74px; border-radius: 6px; object-fit: cover; }
+  .picker button:hover { opacity: 1; }
+  .picker button[aria-pressed="true"] { border-color: var(--accent); opacity: 1; }
+  .stage { display: grid; grid-template-columns: 1fr 2.08fr; gap: 16px; align-items: start; }
+  .inputs { display: grid; gap: 16px; }
+  .tile { position: relative; }
+  .tile img { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; }
+  .tag {
+    position: absolute; left: 8px; top: 8px; background: rgba(20, 28, 36, .72); color: #fff;
+    font-size: 0.78rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; letter-spacing: .02em;
+  }
+  .control { margin-top: 18px; }
+  .control-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .control-head .label { font-weight: 600; }
+  .control-head .value { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 700; font-size: 1.15rem; }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; cursor: pointer; margin: 0; }
+  .ticks { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; padding: 0 2px; }
+  .ticks span { width: 0; display: flex; justify-content: center; white-space: nowrap; }
+  .hint { text-align: center; color: var(--muted); font-size: 0.93rem; margin: 14px 0 0; min-height: 1.6em; }
+
+  .points { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 26px; }
+  .points div { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .points h3 { margin: 0 0 6px; font-size: 1.02rem; color: var(--accent); }
+  .points p { margin: 0; font-size: 0.94rem; color: var(--muted); line-height: 1.55; }
+
+  pre {
+    background: #17202a; color: #e6edf3; border-radius: 10px; padding: 18px 20px; overflow-x: auto;
+    font: 0.86rem/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 0;
+  }
+  .bib { position: relative; }
+  .copy {
+    position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,.12); color: #fff; border: 0;
+    border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; cursor: pointer;
+  }
+  .copy:hover { background: rgba(255,255,255,.24); }
+  footer { padding: 28px 0 48px; text-align: center; color: var(--muted); font-size: 0.88rem; }
+  a { color: var(--accent); }
+  @media (max-width: 640px) {
+    header { padding-top: 40px; }
+    .stage { grid-template-columns: 1fr; }
+    .inputs { grid-template-columns: 1fr 1fr; }
+    .picker button img { width: 60px; height: 60px; }
+    section { padding: 34px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <h1><span class="name">MotifFlow</span></h1>
+  <p class="subtitle">Training-Free, Self-Contained Style Transfer<br>from Color to Motif in Rectified Flow Transformers</p>
+  <p class="authors">Chun Xie &nbsp;·&nbsp; Itaru Kitahara</p>
+  <p class="affil">University of Tsukuba</p>
+  <div class="buttons">
+    <a class="btn" href="https://arxiv.org/abs/2611.33371">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6V2zm8 1.5V8h4.5L14 3.5zM8.5 12v1.5h7V12h-7zm0 3v1.5h7V15h-7zm0 3v1.5h4.5V18H8.5z"/></svg>
+      Paper (arXiv)
+    </a>
+    <a class="btn" href="https://github.com/xiechun298/MotifFlow">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.09-.12-.3-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.06.74.8 1.19 1.83 1.19 3.09 0 4.42-2.7 5.4-5.27 5.68.42.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+      Code (coming soon)
+    </a>
+  </div>
+</header>
+
+<section class="wrap" style="padding-top: 20px;">
+  <h2>From color to motif with one control</h2>
+  <p class="lead">Pick an example and drag the slider. At 0% only attention injection is active; raising the
+  guidance strength develops the brushwork and then the characteristic motifs of the style image.</p>
+
+  <div class="card">
+    <div class="picker" id="picker" role="group" aria-label="Example"></div>
+    <div class="stage">
+      <div class="inputs">
+        <div class="tile"><img id="img-content" alt="Content image" width="512" height="512"><span class="tag">Content</span></div>
+        <div class="tile"><img id="img-style" alt="Style image" width="512" height="512"><span class="tag">Style</span></div>
+      </div>
+      <div class="tile"><img id="img-result" alt="Stylized result" width="512" height="512"><span class="tag">MotifFlow</span></div>
+    </div>
+    <div class="control">
+      <div class="control-head">
+        <label class="label" for="strength">Guidance strength</label>
+        <span class="value" id="strength-value">50%</span>
+      </div>
+      <input type="range" id="strength" min="0" max="5" step="1" value="3" aria-valuetext="50%">
+      <div class="ticks" aria-hidden="true"><span>0%</span><span>10%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+    </div>
+    <p class="hint" id="hint"></p>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap narrow">
+    <h2>Abstract</h2>
+    <p>Expressive style transfer must reproduce a painting's palette, brushwork, and characteristic motifs
+    while retaining the content image's structure. Attention injection is effective in U-Net-based diffusion
+    models, but adapting it to FLUX often transfers color without capturing the style's distinctive brushwork.
+    Our analysis across backbones links this gap to how injected features are integrated across neighboring
+    spatial locations.</p>
+    <p>We introduce MotifFlow, a training-free, self-contained framework that combines style injection with
+    style-alignment guidance in FLUX. Injection supplies style features during generation but does not
+    explicitly encourage the model's native attention output to align with them. We therefore use the
+    discrepancy between native and injected attention outputs to guide latent-space updates, encouraging the
+    evolving image to develop the style's distinctive brushwork and motifs. Style encoding, guidance, and
+    synthesis all use the same frozen backbone, without auxiliary image encoders or trained adapters.</p>
+    <p>A single strength parameter controls the transition from color transfer to pronounced brushwork and
+    motifs, with additional support for regional stylization and style mixing. Experiments on 1,000
+    content–style pairs show that MotifFlow better matches the local textures of the style image than
+    baseline methods and produces more consistent stylization than injection alone. The same design extends
+    to FLUX.2.</p>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Method</h2>
+  <p class="lead">Injection supplies style features to the forward pass. Alignment guidance then asks the image
+  to produce those features by itself.</p>
+  <figure>
+    <img src="static/img/method.jpg" alt="Method overview: a denoising forward pass with style injection, followed by a differentiable loss forward pass that aligns the image's own attention output with the injected one" loading="lazy" width="2200" height="682">
+    <figcaption>Each sampling step runs a denoising forward pass followed by a differentiable loss forward pass.
+    Both inject cached style keys and values into selected transformer blocks, where rotary position embeddings
+    are left out so that matching does not copy the layout of the style image. In the loss pass, the injected
+    attention output is the target for the image's own attention output; a query anchor keeps the content
+    structure, and grain guidance matches local texture statistics in latent space. The gradients update the
+    latent before the next step, scaled by the strength.</figcaption>
+  </figure>
+  <div class="points">
+    <div><h3>Training-free</h3><p>A frozen FLUX backbone. Nothing is fine-tuned, and no adapter or LoRA is added.</p></div>
+    <div><h3>Self-contained</h3><p>Style encoding, guidance and synthesis use the same model, with no auxiliary image encoder.</p></div>
+    <div><h3>One strength control</h3><p>A single parameter scales the latent guidance, from color transfer to brushwork to motifs.</p></div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>Comparison</h2>
+    <p class="lead">Painted strokes, graphic marks, mosaic tiles and geometric patterns, on FLUX.1 and FLUX.2.</p>
+    <figure>
+      <img src="static/img/comparison.jpg" alt="Qualitative comparison of MotifFlow on FLUX.1 and FLUX.2 with USO, Redux, StyleID, StyleGallery and Attention Distillation on four content-style pairs" loading="lazy" width="2100" height="1030">
+      <figcaption>MotifFlow adapts the visual form of each style to the content composition. Redux is shown at
+      strength 0.65; AD denotes the official Stable Diffusion 1.5 implementation of Attention Distillation.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="wrap">
+  <h2>Regional stylization and style mixing</h2>
+  <p class="lead">Masks come from the backbone's own text-to-image attention, so no segmentation model is needed.</p>
+  <figure>
+    <img src="static/img/spatial.jpg" alt="Four controls: guidance restricted to background or subject, selecting lemon or leaf motifs of a style, assigning two styles to background and subject, and mixing two styles globally" loading="lazy" width="2100" height="924">
+    <figcaption>(a) Guidance applied globally, or restricted to the background or the subject. (b) Selecting
+    the lemon or the leaf motifs of one style image. (c) Two styles assigned to background and subject, and
+    swapped. (d) Global mixing from style A (<i>w</i> = 0) to style B (<i>w</i> = 1).</figcaption>
+  </figure>
+</section>
+
+<section class="alt">
+  <div class="wrap narrow">
+    <h2>More results</h2>
+    <figure>
+      <img src="static/img/gallery.jpg" alt="Gallery of additional MotifFlow results" loading="lazy" width="1400" height="1949">
+      <figcaption>Each group shows the content image (top left), the style image (bottom left) and the result.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="wrap narrow">
+  <h2>Citation</h2>
+  <div class="bib">
+    <button class="copy" id="copy" type="button">Copy</button>
+<pre id="bibtex">@article{xie2026motifflow,
+  title   = {MotifFlow: Training-Free, Self-Contained Style Transfer from Color to Motif in Rectified Flow Transformers},
+  author  = {Xie, Chun and Kitahara, Itaru},
+  journal = {arXiv preprint arXiv:2611.33371},
+  year    = {2026}
+}</pre>
+  </div>
+</section>
+
+<footer class="wrap">
+  MotifFlow · University of Tsukuba · <a href="https://arxiv.org/abs/2611.33371">arXiv:2611.33371</a>
+</footer>
+
+<script>
+(function () {
+  var LEVELS = [0, 10, 25, 50, 75, 100];
+  var HINTS = [
+    "0%: attention injection only.",
+    "", "", "", "",
+    "100%: the default setting."
+  ];
+  var EXAMPLES = [
+    { id: "eiffel", name: "Eiffel Tower and a swirling night sky" },
+    { id: "owl", name: "Owl and a graphic poster" },
+    { id: "lake", name: "Mountain lake and an engraving" },
+    { id: "cake", name: "Cake and a lemon pattern" }
+  ];
+  var base = "static/slider/";
+  var picker = document.getElementById("picker");
+  var range = document.getElementById("strength");
+  var valueEl = document.getElementById("strength-value");
+  var hintEl = document.getElementById("hint");
+  var content = document.getElementById("img-content");
+  var style = document.getElementById("img-style");
+  var result = document.getElementById("img-result");
+  var current = 0;
+
+  function src(ex, name) { return base + ex.id + "/" + name + ".jpg"; }
+
+  function render() {
+    var ex = EXAMPLES[current], level = LEVELS[+range.value];
+    result.src = src(ex, "s" + level);
+    result.alt = ex.name + ", guidance strength " + level + "%";
+    valueEl.textContent = level + "%";
+    range.setAttribute("aria-valuetext", level + "%");
+    hintEl.textContent = HINTS[+range.value];
+  }
+
+  function select(i) {
+    current = i;
+    var ex = EXAMPLES[i];
+    content.src = src(ex, "content");
+    style.src = src(ex, "style");
+    Array.prototype.forEach.call(picker.children, function (b, k) {
+      b.setAttribute("aria-pressed", k === i ? "true" : "false");
+    });
+    LEVELS.forEach(function (l) { new Image().src = src(ex, "s" + l); });   // preload so the slider is instant
+    render();
+  }
+
+  EXAMPLES.forEach(function (ex, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.title = ex.name;
+    b.setAttribute("aria-label", ex.name);
+    var im = document.createElement("img");
+    im.src = src(ex, "content");
+    im.alt = "";
+    b.appendChild(im);
+    b.addEventListener("click", function () { select(i); });
+    picker.appendChild(b);
+  });
+  range.addEventListener("input", render);
+  select(0);
+
+  var copy = document.getElementById("copy");
+  copy.addEventListener("click", function () {
+    var text = document.getElementById("bibtex").textContent;
+    var done = function () { copy.textContent = "Copied"; setTimeout(function () { copy.textContent = "Copy"; }, 1500); };
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done); }
+    else {
+      var r = document.createRange(); r.selectNodeContents(document.getElementById("bibtex"));
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand("copy"); done();
+    }
+  });
+})();
+</script>
+</body>
+</html>

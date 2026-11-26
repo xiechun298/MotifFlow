@@ -2,7 +2,8 @@
 
 Chun Xie, Itaru Kitahara — University of Tsukuba
 
-[**Paper (arXiv:2611.33371)**](https://arxiv.org/abs/2611.33371)
+[![arXiv](https://img.shields.io/badge/arXiv-2611.33371-b31b1b.svg)](https://arxiv.org/abs/2611.33371)
+[![Project Page](https://img.shields.io/badge/Project-Page-286879.svg)](https://xiechun298.github.io/MotifFlow/)
 
 > **Code coming soon.** This repository will host the official implementation of MotifFlow.
 
