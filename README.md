@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img src="assets/logo.svg" alt="MotifFlow" height="84">
+  </picture>
+</p>
+
 # MotifFlow: Training-Free, Self-Contained Style Transfer from Color to Motif in Rectified Flow Transformers
 
 Chun Xie, Itaru Kitahara — University of Tsukuba

@@ -9,6 +9,7 @@
 <meta property="og:description" content="Training-free style transfer on FLUX with a single strength control, from color to brushwork to motif.">
 <meta property="og:image" content="https://xiechun298.github.io/MotifFlow/static/img/social.jpg">
 <meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="static/img/logo-mark.svg">
 <style>
   :root {
     --ink: #1c2530;
@@ -29,8 +30,8 @@
   .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
   .narrow { max-width: 780px; margin: 0 auto; }
   header { padding: 64px 0 28px; text-align: center; }
-  h1 { font-size: clamp(1.7rem, 4.2vw, 2.7rem); line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
-  h1 .name { color: var(--accent); }
+  h1 { font-size: clamp(1.7rem, 4.2vw, 2.7rem); line-height: 1.2; margin: 0 0 14px; letter-spacing: -0.01em; }
+  h1 .logo { display: block; margin: 0 auto; height: clamp(54px, 9vw, 86px); width: auto; }
   .subtitle { font-size: clamp(1.05rem, 2.3vw, 1.4rem); font-weight: 500; color: var(--ink); margin: 0 0 26px; line-height: 1.35; }
   .authors { font-size: 1.12rem; margin: 0; }
   .affil { color: var(--muted); margin: 4px 0 24px; }
@@ -108,7 +109,7 @@
 <body>
 
 <header class="wrap">
-  <h1><span class="name">MotifFlow</span></h1>
+  <h1><img class="logo" src="static/img/logo.svg" alt="MotifFlow" width="289" height="72"></h1>
   <p class="subtitle">Training-Free, Self-Contained Style Transfer<br>from Color to Motif in Rectified Flow Transformers</p>
   <p class="authors">Chun Xie &nbsp;·&nbsp; Itaru Kitahara</p>
   <p class="affil">University of Tsukuba</p>
