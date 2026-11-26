@@ -1,5 +1,9 @@
 # MotifFlow: Training-Free, Self-Contained Style Transfer from Color to Motif in Rectified Flow Transformers
 
+Chun Xie, Itaru Kitahara — University of Tsukuba
+
+[**Paper (arXiv:2611.33371)**](https://arxiv.org/abs/2611.33371)
+
 > **Code coming soon.** This repository will host the official implementation of MotifFlow.
 
 ![MotifFlow results at increasing guidance strength](assets/teaser.jpg)
@@ -32,3 +36,14 @@ of the latent, so the image being generated develops the brushwork and motifs of
 - [ ] Regional stylization and style mixing
 - [ ] FLUX.2 support
 - [ ] Evaluation scripts
+
+## Citation
+
+```bibtex
+@article{xie2026motifflow,
+  title   = {MotifFlow: Training-Free, Self-Contained Style Transfer from Color to Motif in Rectified Flow Transformers},
+  author  = {Xie, Chun and Kitahara, Itaru},
+  journal = {arXiv preprint arXiv:2611.33371},
+  year    = {2026}
+}
+```
