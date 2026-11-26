@@ -53,12 +53,12 @@
   .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
 
   /* strength explorer */
-  .picker { display: flex; gap: 10px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .picker { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
   .picker button {
     padding: 0; border: 3px solid transparent; border-radius: 10px; background: none; cursor: pointer; line-height: 0;
     opacity: 0.6; transition: opacity .15s, border-color .15s;
   }
-  .picker button img { width: 74px; height: 74px; border-radius: 6px; object-fit: cover; }
+  .picker button img { width: 64px; height: 64px; border-radius: 6px; object-fit: cover; display: block; }
   .picker button:hover { opacity: 1; }
   .picker button[aria-pressed="true"] { border-color: var(--accent); opacity: 1; }
   .stage { display: grid; grid-template-columns: calc((100% - 32px) / 3) 1fr; gap: 16px; align-items: start; }
@@ -99,7 +99,8 @@
     header { padding-top: 40px; }
     .stage { grid-template-columns: 1fr; }
     .inputs { grid-template-columns: 1fr 1fr; }
-    .picker button img { width: 60px; height: 60px; }
+    .picker { gap: 6px; }
+    .picker button img { width: 46px; height: 46px; }
     section { padding: 34px 0; }
   }
 </style>
@@ -253,7 +254,15 @@
     { id: "eiffel", name: "Eiffel Tower and a swirling night sky" },
     { id: "owl", name: "Owl and a graphic poster" },
     { id: "lake", name: "Mountain lake and an engraving" },
-    { id: "cake", name: "Cake and a lemon pattern" }
+    { id: "cake", name: "Cake and a lemon pattern" },
+    { id: "skyline", name: "City skyline and a primary-color grid" },
+    { id: "elephant", name: "Elephant and a folk-art pattern" },
+    { id: "tower", name: "Clock tower and a geometric pattern" },
+    { id: "strawberries", name: "Strawberries and a swirling abstract" },
+    { id: "library", name: "Library hall and a neon graphic" },
+    { id: "lake2", name: "Mountain lake and an abstract painting" },
+    { id: "bison", name: "Bison and a mosaic" },
+    { id: "building", name: "Office building and a watercolor" }
   ];
   var base = "static/slider/";
   var picker = document.getElementById("picker");
@@ -294,8 +303,9 @@
     b.title = ex.name;
     b.setAttribute("aria-label", ex.name);
     var im = document.createElement("img");
-    im.src = src(ex, "content");
+    im.src = src(ex, "thumb");
     im.alt = "";
+    im.width = 74; im.height = 74;
     b.appendChild(im);
     b.addEventListener("click", function () { select(i); });
     picker.appendChild(b);
